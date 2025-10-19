@@ -242,10 +242,9 @@ class Witcher():
 
                             target_path = os.path.join(self.appdir, urlpath)
 
-                            if os.path.exists(target_path) and os.path.isfile(target_path):
-                                if not (target_path.endswith('.php') or target_path.endswith('.phar') or target_path.endswith('.phtml')):
-                                    print(f"[INFO] Skipping non-PHP file: {target_path}")
-                                    continue
+                            if os.path.isfile(target_path) and not target_path.endswith('.php'):
+                                print(f"[INFO] Skipping non-PHP file: {target_path}")
+                                continue
 
                             print(f"target_path={target_path}")
 
@@ -263,7 +262,7 @@ class Witcher():
                                     test_path = os.path.join(target_path, php_file)
                                     if os.path.isfile(test_path) and test_path.endswith('.php'):
                                         target_path = test_path
-                                        urlpath = os.path.join(original_urlpath, php_file)
+                                        urlpath = os.path.join(urlpath, php_file) if not urlpath.endswith('/') else urlpath + php_file
                                         print(f"[INFO] Using PHP file: {target_path}")
                                         print(f"[INFO] Updated URL path: {urlpath}")
                                         php_found = True
