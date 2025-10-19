@@ -241,42 +241,17 @@ class Witcher():
                                 urlpath = urlpath[1:]
 
                             target_path = os.path.join(self.appdir, urlpath)
-
-                            if os.path.isfile(target_path) and not target_path.endswith('.php'):
-                                print(f"[INFO] Skipping non-PHP file: {target_path}")
-                                continue
-
                             print(f"target_path={target_path}")
-
-                            # Add debug information
-                            print(f"[DEBUG] Initial target_path: {target_path}")
-                            print(f"[DEBUG] Is directory: {os.path.isdir(target_path)}")
-                            print(f"[DEBUG] URL path ends with '/': {url.path.endswith('/')}")
-
-                            if url.path.endswith('/') and os.path.isdir(target_path):
-                                print(f"[DEBUG] Processing directory for URL ending with '/': {target_path}")
-                                possible_files = ["index.php", "default.php", "main.php"]
-                                php_found = False
-
-                                for php_file in possible_files:
-                                    test_path = os.path.join(target_path, php_file)
-                                    if os.path.isfile(test_path) and test_path.endswith('.php'):
-                                        target_path = test_path
-                                        urlpath = os.path.join(urlpath, php_file) if not urlpath.endswith('/') else urlpath + php_file
-                                        print(f"[INFO] Using PHP file: {target_path}")
-                                        print(f"[INFO] Updated URL path: {urlpath}")
-                                        php_found = True
-                                        break
-
-                                if not php_found:
-                                    print(f"[WARNING] No PHP files found in {target_path}, keeping original path")
-
-                            print(f"target_path={target_path}")
-                            print(f"urlpath={urlpath}")
-
                             if not os.path.exists(target_path):
                                 target_path = Witcher.find_path(urlpath, last_rootpath)
                                 last_rootpath.add(target_path.replace(urlpath,""))
+
+                            if url.path.find(".php") == -1 and not url.path.endswith("/"):
+                                print(
+                                    f"Skipping {url} because php-cgi being used to evaluate but request url is for non php item target_path={target_path}")
+                                continue
+                        else:
+                            target_path = req['_url']
 
 
                 method = req.get("_method", "GET").upper()
@@ -954,7 +929,6 @@ class Witcher():
                     os.kill(1, signal.SIGQUIT)
                 except Exception as e:
                     print('Could not kill supervisor: ' + e + '\n')
-
 
 
 
