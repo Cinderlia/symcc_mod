@@ -239,48 +239,66 @@ class Witcher():
                             urlpath = url.path
                             if urlpath.startswith("/"):
                                 urlpath = urlpath[1:]
-
+                    
                             target_path = os.path.join(self.appdir, urlpath)
-
-                            # �ļ����͹��� - ��Ŀ¼����֮ǰ
+                    
+                            # 文件类型过滤 - 在目录处理之前
                             if os.path.isfile(target_path) and not target_path.endswith('.php'):
                                 print(f"[INFO] Skipping non-PHP file: {target_path}")
                                 continue
-
+                    
                             print(f"target_path={target_path}")
-
-                            # ������Ϣ
+                    
+                            # 调试信息
                             print(f"[DEBUG] Initial target_path: {target_path}")
                             print(f"[DEBUG] Is directory: {os.path.isdir(target_path)}")
                             print(f"[DEBUG] URL path ends with '/': {url.path.endswith('/')}")
-
-                            # Ŀ¼�����߼�
+                    
+                            # 目录处理逻辑 - 修改这里
                             if url.path.endswith('/') and os.path.isdir(target_path):
                                 print(f"[DEBUG] Processing directory for URL ending with '/': {target_path}")
-                                possible_files = ["index.php", "default.php", "main.php"]
-                                php_found = False
-
-                                for php_file in possible_files:
-                                    test_path = os.path.join(target_path, php_file)
-                                    if os.path.isfile(test_path) and test_path.endswith('.php'):
-                                        target_path = test_path
-                                        # ֻ��������Ÿ���urlpath
-                                        urlpath = os.path.join(urlpath, php_file) if not urlpath.endswith('/') else urlpath + php_file
-                                        print(f"[INFO] Using PHP file: {target_path}")
-                                        print(f"[INFO] Updated URL path: {urlpath}")
-                                        php_found = True
+                                
+                                # 查找目录下的所有PHP文件
+                                php_files = []
+                                try:
+                                    for file in os.listdir(target_path):
+                                        if file.endswith('.php') and os.path.isfile(os.path.join(target_path, file)):
+                                            php_files.append(file)
+                                except Exception as e:
+                                    print(f"[ERROR] Failed to list directory {target_path}: {e}")
+                                    php_files = []  # 确保php_files是列表
+                                
+                                print(f"[INFO] Found {len(php_files)} PHP files in directory: {php_files}")
+                                
+                                # 优先使用默认文件
+                                default_files = ["index.php", "default.php", "main.php"]
+                                selected_file = None
+                                
+                                # 首先检查默认文件
+                                for default_file in default_files:
+                                    if default_file in php_files:
+                                        selected_file = default_file
                                         break
-
-                                if not php_found:
+                                
+                                # 如果没有默认文件，但有其他PHP文件，使用第一个
+                                if not selected_file and php_files:
+                                    selected_file = php_files[0]
+                                    print(f"[INFO] No default PHP file found, using first available: {selected_file}")
+                                
+                                if selected_file:
+                                    target_path = os.path.join(target_path, selected_file)
+                                    urlpath = os.path.join(urlpath, selected_file) if not urlpath.endswith('/') else urlpath + selected_file
+                                    print(f"[INFO] Using PHP file: {target_path}")
+                                    print(f"[INFO] Updated URL path: {urlpath}")
+                                else:
                                     print(f"[WARNING] No PHP files found in {target_path}, keeping original path")
-
+                    
                             print(f"target_path={target_path}")
                             print(f"urlpath={urlpath}")
-
+                    
                             if not os.path.exists(target_path):
                                 target_path = Witcher.find_path(urlpath, last_rootpath)
                                 last_rootpath.add(target_path.replace(urlpath,""))
-
 
                 method = req.get("_method", "GET").upper()
                 if 400 <= req.get("response_status", 200) < 500:
