@@ -284,7 +284,7 @@ class Witcher():
                             else:
                                 print(f"{WITCH_FAIL} Target path not found: {target_path}")
                                 continue
-
+                            method = req.get("_method", "GET").upper()
                             for php_target in php_targets:
                                 php_file_path = php_target['file_path']
                                 php_url_path = php_target['url_path']
