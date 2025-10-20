@@ -254,44 +254,66 @@ class Witcher():
                             print(f"[DEBUG] Is directory: {os.path.isdir(target_path)}")
                             print(f"[DEBUG] URL path ends with '/': {url.path.endswith('/')}")
                     
-                            # 目录处理逻辑 - 修改这里
+                            # 目录处理逻辑 - 递归查找所有PHP文件
                             if url.path.endswith('/') and os.path.isdir(target_path):
                                 print(f"[DEBUG] Processing directory for URL ending with '/': {target_path}")
                                 
-                                # 查找目录下的所有PHP文件
-                                php_files = []
+                                # 递归查找所有PHP文件
+                                all_php_files = []
                                 try:
-                                    for file in os.listdir(target_path):
-                                        if file.endswith('.php') and os.path.isfile(os.path.join(target_path, file)):
-                                            php_files.append(file)
+                                    for root, dirs, files in os.walk(target_path):
+                                        for file in files:
+                                            if file.endswith('.php'):
+                                                full_path = os.path.join(root, file)
+                                                # 计算相对于target_path的相对路径
+                                                rel_path = os.path.relpath(full_path, target_path)
+                                                all_php_files.append((file, full_path, rel_path))
                                 except Exception as e:
-                                    print(f"[ERROR] Failed to list directory {target_path}: {e}")
-                                    php_files = []  # 确保php_files是列表
+                                    print(f"[ERROR] Failed to walk directory {target_path}: {e}")
+                                    all_php_files = []
                                 
-                                print(f"[INFO] Found {len(php_files)} PHP files in directory: {php_files}")
+                                print(f"[INFO] Found {len(all_php_files)} PHP files in directory and subdirectories")
                                 
-                                # 优先使用默认文件
-                                default_files = ["index.php", "default.php", "main.php"]
-                                selected_file = None
-                                
-                                # 首先检查默认文件
-                                for default_file in default_files:
-                                    if default_file in php_files:
-                                        selected_file = default_file
-                                        break
-                                
-                                # 如果没有默认文件，但有其他PHP文件，使用第一个
-                                if not selected_file and php_files:
-                                    selected_file = php_files[0]
-                                    print(f"[INFO] No default PHP file found, using first available: {selected_file}")
-                                
-                                if selected_file:
-                                    target_path = os.path.join(target_path, selected_file)
-                                    urlpath = os.path.join(urlpath, selected_file) if not urlpath.endswith('/') else urlpath + selected_file
-                                    print(f"[INFO] Using PHP file: {target_path}")
-                                    print(f"[INFO] Updated URL path: {urlpath}")
+                                if all_php_files:
+                                    # 为每个PHP文件创建测试用例
+                                    processed_count = 0
+                                    for file_name, full_target_path, rel_path in all_php_files:
+                                        # 构建新的URL路径
+                                        if urlpath.endswith('/'):
+                                            file_urlpath = urlpath + rel_path
+                                        else:
+                                            file_urlpath = urlpath + '/' + rel_path
+                                        
+                                        # 标准化路径（将反斜杠替换为正斜杠，用于URL）
+                                        file_urlpath = file_urlpath.replace('\\', '/')
+                                        
+                                        print(f"[INFO] Testing PHP file: {full_target_path}")
+                                        print(f"[INFO] Updated URL path: {file_urlpath}")
+                                        
+                                        # 复制req对象并更新URL
+                                        file_req = req.copy()
+                                        # 构建完整的URL
+                                        if file_req["_url"].endswith('/'):
+                                            new_url = file_req["_url"] + rel_path
+                                        else:
+                                            new_url = file_req["_url"] + '/' + rel_path
+                                        file_req["_url"] = new_url.replace('\\', '/')
+                                        
+                                        # 调用处理单个目标的函数
+                                        # 这里需要根据您的实际代码调用相应的处理函数
+                                        try:
+                                            # 假设有一个处理单个目标的方法
+                                            self.process_single_target(file_req, full_target_path, file_urlpath)
+                                            processed_count += 1
+                                        except Exception as e:
+                                            print(f"[ERROR] Failed to process {full_target_path}: {e}")
+                                    
+                                    print(f"[INFO] Successfully processed {processed_count} PHP files")
+                                    
+                                    # 跳过原始的单文件处理，因为我们已经处理了所有文件
+                                    continue
                                 else:
-                                    print(f"[WARNING] No PHP files found in {target_path}, keeping original path")
+                                    print(f"[WARNING] No PHP files found in {target_path} and its subdirectories, keeping original path")
                     
                             print(f"target_path={target_path}")
                             print(f"urlpath={urlpath}")
