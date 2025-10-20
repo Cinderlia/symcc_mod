@@ -242,20 +242,17 @@ class Witcher():
                     
                             target_path = os.path.join(self.appdir, urlpath)
                     
-                            # 文件类型过滤 - 在目录处理之前
                             if os.path.isfile(target_path) and not target_path.endswith('.php'):
                                 print(f"[INFO] Skipping non-PHP file: {target_path}")
                                 continue
                     
                             print(f"target_path={target_path}")
                     
-                            # 目录处理逻辑 - 递归查找所有PHP文件
                             if url.path.endswith('/') and os.path.isdir(target_path):
                                 print(f"=== WITCHER_DEBUG_START ===")
-                                print(f"=== 处理目录: {target_path} ===")
-                                print(f"=== 原始URL: {req['_url']} ===")
+                                print(f"=== PROCESSING_DIR: {target_path} ===")
+                                print(f"=== ORIGINAL_URL: {req['_url']} ===")
                                 
-                                # 递归查找所有PHP文件
                                 all_php_files = []
                                 try:
                                     for root, dirs, files in os.walk(target_path):
@@ -268,7 +265,7 @@ class Witcher():
                                                 all_php_files.append((file, full_path, rel_path))
                                                 print(f"=== WITCHER_PHP_FOUND: {file} | {rel_path} ===")
                                 except Exception as e:
-                                    print(f"=== WITCHER_ERROR: 目录遍历失败 {e} ===")
+                                    print(f"=== WITCHER_ERROR: Directory walk failed {e} ===")
                                     all_php_files = []
                                 
                                 print(f"=== WITCHER_TOTAL_PHP_FILES: {len(all_php_files)} ===")
@@ -276,7 +273,6 @@ class Witcher():
                                 if all_php_files:
                                     processed_count = 0
                                     for file_name, full_target_path, rel_path in all_php_files:
-                                        # 构建新的URL路径
                                         if urlpath.endswith('/'):
                                             file_urlpath = urlpath + rel_path
                                         else:
@@ -288,7 +284,6 @@ class Witcher():
                                         print(f"=== WITCHER_FULL_PATH: {full_target_path} ===")
                                         print(f"=== WITCHER_URL_PATH: {file_urlpath} ===")
                                         
-                                        # 复制req对象并更新URL
                                         file_req = req.copy()
                                         if file_req["_url"].endswith('/'):
                                             new_url = file_req["_url"] + rel_path
@@ -298,7 +293,6 @@ class Witcher():
                                         
                                         print(f"=== WITCHER_NEW_URL: {file_req['_url']} ===")
                                         
-                                        # 检查process_single_target方法是否存在
                                         if hasattr(self, 'process_single_target'):
                                             print(f"=== WITCHER_METHOD_EXISTS: process_single_target ===")
                                             try:
@@ -309,14 +303,13 @@ class Witcher():
                                                 print(f"=== WITCHER_PROCESS_ERROR: {file_name} - {e} ===")
                                         else:
                                             print(f"=== WITCHER_METHOD_MISSING: process_single_target ===")
-                                            # 如果方法不存在，记录并跳过
                                             break
                                     
                                     print(f"=== WITCHER_PROCESSED_COUNT: {processed_count}/{len(all_php_files)} ===")
                                     
                                     if processed_count > 0:
                                         print(f"=== WITCHER_SKIPPING_ORIGINAL ===")
-                                        continue  # 只有成功处理了文件时才跳过原始逻辑
+                                        continue 
                                     else:
                                         print(f"=== WITCHER_FALLBACK_TO_ORIGINAL ===")
                                 else:
