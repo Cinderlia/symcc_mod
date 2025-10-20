@@ -249,33 +249,31 @@ class Witcher():
                     
                             print(f"target_path={target_path}")
                     
-                            # 调试信息
-                            print(f"[DEBUG] Initial target_path: {target_path}")
-                            print(f"[DEBUG] Is directory: {os.path.isdir(target_path)}")
-                            print(f"[DEBUG] URL path ends with '/': {url.path.endswith('/')}")
-                    
                             # 目录处理逻辑 - 递归查找所有PHP文件
                             if url.path.endswith('/') and os.path.isdir(target_path):
-                                print(f"[DEBUG] Processing directory for URL ending with '/': {target_path}")
+                                print(f"=== WITCHER_DEBUG_START ===")
+                                print(f"=== 处理目录: {target_path} ===")
+                                print(f"=== 原始URL: {req['_url']} ===")
                                 
                                 # 递归查找所有PHP文件
                                 all_php_files = []
                                 try:
                                     for root, dirs, files in os.walk(target_path):
+                                        print(f"=== WITCHER_SCAN_DIR: {root} ===")
+                                        print(f"=== WITCHER_FILES_IN_DIR: {len(files)} ===")
                                         for file in files:
                                             if file.endswith('.php'):
                                                 full_path = os.path.join(root, file)
-                                                # 计算相对于target_path的相对路径
                                                 rel_path = os.path.relpath(full_path, target_path)
                                                 all_php_files.append((file, full_path, rel_path))
+                                                print(f"=== WITCHER_PHP_FOUND: {file} | {rel_path} ===")
                                 except Exception as e:
-                                    print(f"[ERROR] Failed to walk directory {target_path}: {e}")
+                                    print(f"=== WITCHER_ERROR: 目录遍历失败 {e} ===")
                                     all_php_files = []
                                 
-                                print(f"[INFO] Found {len(all_php_files)} PHP files in directory and subdirectories")
+                                print(f"=== WITCHER_TOTAL_PHP_FILES: {len(all_php_files)} ===")
                                 
                                 if all_php_files:
-                                    # 为每个PHP文件创建测试用例
                                     processed_count = 0
                                     for file_name, full_target_path, rel_path in all_php_files:
                                         # 构建新的URL路径
@@ -284,36 +282,47 @@ class Witcher():
                                         else:
                                             file_urlpath = urlpath + '/' + rel_path
                                         
-                                        # 标准化路径（将反斜杠替换为正斜杠，用于URL）
                                         file_urlpath = file_urlpath.replace('\\', '/')
                                         
-                                        print(f"[INFO] Testing PHP file: {full_target_path}")
-                                        print(f"[INFO] Updated URL path: {file_urlpath}")
+                                        print(f"=== WITCHER_PROCESSING_FILE: {file_name} ===")
+                                        print(f"=== WITCHER_FULL_PATH: {full_target_path} ===")
+                                        print(f"=== WITCHER_URL_PATH: {file_urlpath} ===")
                                         
                                         # 复制req对象并更新URL
                                         file_req = req.copy()
-                                        # 构建完整的URL
                                         if file_req["_url"].endswith('/'):
                                             new_url = file_req["_url"] + rel_path
                                         else:
                                             new_url = file_req["_url"] + '/' + rel_path
                                         file_req["_url"] = new_url.replace('\\', '/')
                                         
-                                        # 调用处理单个目标的函数
-                                        # 这里需要根据您的实际代码调用相应的处理函数
-                                        try:
-                                            # 假设有一个处理单个目标的方法
-                                            self.process_single_target(file_req, full_target_path, file_urlpath)
-                                            processed_count += 1
-                                        except Exception as e:
-                                            print(f"[ERROR] Failed to process {full_target_path}: {e}")
+                                        print(f"=== WITCHER_NEW_URL: {file_req['_url']} ===")
+                                        
+                                        # 检查process_single_target方法是否存在
+                                        if hasattr(self, 'process_single_target'):
+                                            print(f"=== WITCHER_METHOD_EXISTS: process_single_target ===")
+                                            try:
+                                                self.process_single_target(file_req, full_target_path, file_urlpath)
+                                                processed_count += 1
+                                                print(f"=== WITCHER_PROCESS_SUCCESS: {file_name} ===")
+                                            except Exception as e:
+                                                print(f"=== WITCHER_PROCESS_ERROR: {file_name} - {e} ===")
+                                        else:
+                                            print(f"=== WITCHER_METHOD_MISSING: process_single_target ===")
+                                            # 如果方法不存在，记录并跳过
+                                            break
                                     
-                                    print(f"[INFO] Successfully processed {processed_count} PHP files")
+                                    print(f"=== WITCHER_PROCESSED_COUNT: {processed_count}/{len(all_php_files)} ===")
                                     
-                                    # 跳过原始的单文件处理，因为我们已经处理了所有文件
-                                    continue
+                                    if processed_count > 0:
+                                        print(f"=== WITCHER_SKIPPING_ORIGINAL ===")
+                                        continue  # 只有成功处理了文件时才跳过原始逻辑
+                                    else:
+                                        print(f"=== WITCHER_FALLBACK_TO_ORIGINAL ===")
                                 else:
-                                    print(f"[WARNING] No PHP files found in {target_path} and its subdirectories, keeping original path")
+                                    print(f"=== WITCHER_NO_PHP_FILES ===")
+                    
+                                print(f"=== WITCHER_DEBUG_END ===")
                     
                             print(f"target_path={target_path}")
                             print(f"urlpath={urlpath}")
