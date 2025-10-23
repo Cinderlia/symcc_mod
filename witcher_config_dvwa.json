@@ -1,0 +1,43 @@
+{
+  "testname": "dvwa_no_auth",
+  "afl_inst_interpreter_binary": "/phpsrc/sapi/cgi/php-cgi",
+  "wc_inst_interpreter_binary": "/phpsrc/sapi/cgi/php-cgi",
+  "base_url": "http://127.0.0.1/dvwa",
+  "afl_path": "/afl",
+  "ld_library_path": "/wclibs",
+  "afl_preload": "/wclibs/lib_db_fault_escalator.so",
+  "number_of_refuzzes": 1,
+  "timeout": 300,
+  "script_skip_list": [],
+  "script_random_order": 1,
+  "script_start_index": 0,
+  "script_end_index": 200,
+  "cores": 8,
+  "binary_options": "",
+  "request_crawler": {
+    "form_url": "http://127.0.0.1/dvwa",
+    "usernameSelector": "",
+    "usernameValue": "",
+    "passwordSelector": "",
+    "passwordValue": "",
+    "submitType": "",
+    "positiveLoginMessage": "",
+    "method": "GET",
+    "form_selector": "",
+    "form_submit_selector": "",
+    "ignoreValues": [],
+    "urlUniqueIfValueUnique": []
+  },
+  "direct": {
+    "url": "NO_LOGIN",
+    "postData": "",
+    "getData": "",
+    "positiveHeaders": {},
+    "positiveBody": "",
+    "method": "GET",
+    "cgiBinary": "/phpsrc/sapi/cgi/php-cgi",
+    "loginSessionCookie": "",
+    "mandatoryGet": "",
+    "extra_authorized_requests": []
+  }
+}
